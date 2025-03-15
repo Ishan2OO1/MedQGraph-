@@ -1,4 +1,3 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,7 +8,11 @@
         const { ipcRenderer } = require('electron');
 
         function uploadCSV() {
-            ipcRenderer.send('navigate-to-upload'); // Send event to main.js
+            ipcRenderer.send('navigate-to-upload'); // Navigate to Upload CSV Page
+        }
+
+        function queryDB() {
+            ipcRenderer.send('navigate-to-query'); // Navigate to Query DB Page
         }
     </script>
     <style>
@@ -61,7 +64,7 @@
 
     <div class="container">
         <button class="upload-btn" onclick="uploadCSV()">Upload CSV</button>
-        <button class="query-btn">Query DB</button>
+        <button class="query-btn" onclick="queryDB()">Query DB</button>
     </div>
 
 </body>

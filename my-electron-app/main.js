@@ -1,5 +1,4 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
-const path = require('path');
 
 let mainWindow;
 
@@ -19,6 +18,14 @@ app.whenReady().then(() => {
 // Handle navigation requests from the renderer process
 ipcMain.on('navigate-to-upload', () => {
     mainWindow.loadFile('uploadcsv.html');
+});
+
+ipcMain.on('navigate-to-query', () => {
+    mainWindow.loadFile('query.html');
+});
+
+ipcMain.on('navigate-to-home', () => {
+    mainWindow.loadFile('navigate.html');
 });
 
 app.on('window-all-closed', () => {
