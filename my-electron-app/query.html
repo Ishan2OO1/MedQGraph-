@@ -9,12 +9,19 @@
 
         function submitQuery() {
             const query = document.getElementById('queryInput').value;
-            alert("Query Submitted: " + query);
-            // Add logic to process query if needed
+            document.getElementById('response').innerText = "Processing...";
+
+            // Send the query to the backend (main.js)
+            ipcRenderer.send('run-python-query', query);
         }
 
+        // Listen for the response from Python
+        ipcRenderer.on('query-response', (event, response) => {
+            document.getElementById('response').innerText = response;
+        });
+
         function goBack() {
-            ipcRenderer.send('navigate-to-home'); // Navigate back to navigation page
+            ipcRenderer.send('navigate-to-home'); // Navigate back
         }
     </script>
     <style>
@@ -64,6 +71,16 @@
         .back-btn:hover {
             background-color: #c82333;
         }
+
+        #response {
+            margin-top: 20px;
+            padding: 10px;
+            width: 300px;
+            text-align: center;
+            border: 1px solid #ccc;
+            background-color: white;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
@@ -72,6 +89,8 @@
     <input type="text" id="queryInput" placeholder="Enter your query here...">
     <button class="submit-btn" onclick="submitQuery()">Submit</button>
     <button class="back-btn" onclick="goBack()">Back</button>
+
+    <div id="response">Waiting for response...</div>
 
 </body>
 </html>
