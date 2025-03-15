@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Query Database</title>
+    <script>
+        const { ipcRenderer } = require('electron');
+
+        function submitQuery() {
+            const query = document.getElementById('queryInput').value;
+            alert("Query Submitted: " + query);
+            // Add logic to process query if needed
+        }
+
+        function goBack() {
+            ipcRenderer.send('navigate-to-home'); // Navigate back to navigation page
+        }
+    </script>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+            font-family: Arial, sans-serif;
+        }
+
+        input {
+            width: 300px;
+            padding: 10px;
+            margin: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: 0.3s;
+        }
+
+        .submit-btn {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .submit-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .back-btn {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .back-btn:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Query the Database</h1>
+    <input type="text" id="queryInput" placeholder="Enter your query here...">
+    <button class="submit-btn" onclick="submitQuery()">Submit</button>
+    <button class="back-btn" onclick="goBack()">Back</button>
+
+</body>
+</html>
