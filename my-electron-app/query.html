@@ -12,7 +12,7 @@
             document.getElementById('response').innerText = "Processing...";
 
             // Send the query to the backend (main.js)
-            ipcRenderer.send('run-python-query', query);
+            ipcRenderer.send('run-python-query', { query }); // Send query as JSON
         }
 
         // Listen for the response from Python
@@ -33,6 +33,29 @@
             height: 100vh;
             background-color: #f4f4f4;
             font-family: Arial, sans-serif;
+            position: relative;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 8px 16px;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            background-color: #dc3545;
+            color: white;
+            transition: 0.3s;
+        }
+
+        .back-btn:hover {
+            background-color: #c82333;
+        }
+
+        h1 {
+            margin-bottom: 20px;
         }
 
         input {
@@ -44,32 +67,20 @@
             border-radius: 5px;
         }
 
-        button {
+        .submit-btn {
             padding: 10px;
             margin-top: 10px;
             font-size: 16px;
             border: none;
             cursor: pointer;
             border-radius: 5px;
-            transition: 0.3s;
-        }
-
-        .submit-btn {
             background-color: #007bff;
             color: white;
+            transition: 0.3s;
         }
 
         .submit-btn:hover {
             background-color: #0056b3;
-        }
-
-        .back-btn {
-            background-color: #dc3545;
-            color: white;
-        }
-
-        .back-btn:hover {
-            background-color: #c82333;
         }
 
         #response {
@@ -85,10 +96,12 @@
 </head>
 <body>
 
+    <!-- Back Button Positioned at the Top Right -->
+    <button class="back-btn" onclick="goBack()">Back</button>
+
     <h1>Query the Database</h1>
     <input type="text" id="queryInput" placeholder="Enter your query here...">
     <button class="submit-btn" onclick="submitQuery()">Submit</button>
-    <button class="back-btn" onclick="goBack()">Back</button>
 
     <div id="response">Waiting for response...</div>
 
