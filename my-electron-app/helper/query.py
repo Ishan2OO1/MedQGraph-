@@ -19,17 +19,17 @@ llm = ChatOpenAI(
 try:
     from neo4j import GraphDatabase
     
-    class Neo4jDirectConnection:
-        def __init__(self, uri, username, password):
-            self.driver = GraphDatabase.driver(uri, auth=(username, password))
+    # class Neo4jDirectConnection:
+    #     def __init__(self, uri, username, password):
+    #         self.driver = GraphDatabase.driver(uri, auth=(username, password))
             
-        def query(self, cypher_query, parameters=None):
-            with self.driver.session() as session:
-                result = session.run(cypher_query, parameters or {})
-                return [dict(record) for record in result]
+    #     def query(self, cypher_query, parameters=None):
+    #         with self.driver.session() as session:
+    #             result = session.run(cypher_query, parameters or {})
+    #             return [dict(record) for record in result]
                 
-        def close(self):
-            self.driver.close()
+    #     def close(self):
+    #         self.driver.close()
 
     # Create direct connection
     graph = Neo4jDirectConnection(
