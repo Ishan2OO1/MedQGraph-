@@ -14,7 +14,7 @@ PASSWORD = "Nk30WHZPhuWpLUeMRHyuspzr-xjoX7zWw1kcTm8JKlE"
 
 # Function to create nodes in Neo4j
 def create_nodes(tx, row):
-    print(f"Inserting Node for Patient ID: {row['subject_id']}")  # Debugging
+    # print(f"Inserting Node for Patient ID: {row['subject_id']}")  # Debugging
     query = """
     MERGE (p:Patient {subject_id: $subject_id})  
     MERGE (a:Admission {hadm_id: $hadm_id, admission_type: $admission_type})
@@ -37,7 +37,7 @@ def create_nodes(tx, row):
 
 # Function to create relationships in Neo4j
 def create_relationships(tx, row):
-    print(f"Creating relationships for Patient ID: {row['subject_id']}")  # Debugging
+    # print(f"Creating relationships for Patient ID: {row['subject_id']}")  # Debugging
     query = """
     MATCH (p:Patient {subject_id: $subject_id})
     MATCH (a:Admission {hadm_id: $hadm_id})
@@ -76,16 +76,16 @@ def create_relationships(tx, row):
     tx.run(query, **row)
 
 def process_csv_and_create_graph(file_path):
-    print(f"Processing CSV file: {file_path}")  # Debugging
+    # print(f"Processing CSV file: {file_path}")  # Debugging
     if not os.path.exists(file_path):
         raise ValueError(f"File at {file_path} does not exist.")
     
-    df = pd.read_csv(file_path)
-    print("✅ CSV Loaded Successfully! First few rows:")
-    print(df.head())  # Print first few rows for debugging
+    df = pd.read_csv(file_path, low_memory=False)  # Fix dtype warning
+    # print("✅ CSV Loaded Successfully! First few rows:")
+    # print(df.head())  # Print first few rows for debugging
     
     df = df.fillna("Unknown")  # Replace NaN values with "Unknown"
-    df = df.head(50)  # Limit to first 250 rows for testing
+    df = df.head(50)  # Limit to first 50 rows for testing
     
     driver = GraphDatabase.driver(URI, auth=(USERNAME, PASSWORD))
     
@@ -97,18 +97,11 @@ def process_csv_and_create_graph(file_path):
         for _, row in df.iterrows():
             session.execute_write(create_relationships, row)
     
-    print("✅ Knowledge Graph Successfully Created in Neo4j!")
+    # print("✅ Knowledge Graph Successfully Created in Neo4j!")
 
-  
-
-    # 🔹 Connect to Neo4j
-    neo4j_uri = "neo4j+s://5f06d1b4.databases.neo4j.io"
-    neo4j_user = "neo4j"
-    neo4j_password = "Nk30WHZPhuWpLUeMRHyuspzr-xjoX7zWw1kcTm8JKlE"
-
-    graph = Graph(neo4j_uri, auth=(neo4j_user, neo4j_password))
-
-    # 🔹 Expanded Cypher Query to Include More Node Attributes
+    # 🔹 Generate Graph Visualization
+    graph = Graph(URI, auth=(USERNAME, PASSWORD))
+    
     query = """
     MATCH (n)-[r]->(m)
     RETURN labels(n) AS from_type, 
@@ -124,39 +117,19 @@ def process_csv_and_create_graph(file_path):
     """
     data = graph.run(query).data()
 
-    # 🔹 Debugging Output
-    print("\n--- Nodes and Relationships Retrieved ---")
-    for row in data:
-        print(f"From: {row['from']} ({row['from_type']}), Relation: {row['relation']}, To: {row['to']} ({row['to_type']})")
-
-    # 🔹 Handle Missing Values
     filtered_data = [row for row in data if row["from"] != "Unknown" and row["to"] != "Unknown"]
 
     # 🔹 Create NetworkX Graph
     G = nx.DiGraph()
-
-    # ✅ Add all nodes
-    node_types = {}
     for row in filtered_data:
         from_node = f"{row['from']} ({row['from_type'][0]})"
         to_node = f"{row['to']} ({row['to_type'][0]})"
-        
-        # Store node types for tracking
-        node_types[from_node] = row['from_type'][0]
-        node_types[to_node] = row['to_type'][0]
-
         G.add_node(from_node)
         G.add_node(to_node)
-
-    # ✅ Add all edges
-    for row in filtered_data:
-        from_node = f"{row['from']} ({row['from_type'][0]})"
-        to_node = f"{row['to']} ({row['to_type'][0]})"
         G.add_edge(from_node, to_node, label=row["relation"])
 
-    # 🔹 Generate 3D positions for nodes
+    # 🔹 Generate 3D Graph Visualization
     pos = nx.spring_layout(G, dim=3, seed=42)
-
     node_x, node_y, node_z, node_labels = [], [], [], []
     for node, (x, y, z) in pos.items():
         node_x.append(x)
@@ -164,7 +137,6 @@ def process_csv_and_create_graph(file_path):
         node_z.append(z)
         node_labels.append(node)
 
-    # ✅ Edge coordinates
     edge_x, edge_y, edge_z = [], [], []
     for edge in G.edges():
         x0, y0, z0 = pos[edge[0]]
@@ -173,76 +145,25 @@ def process_csv_and_create_graph(file_path):
         edge_y.extend([y0, y1, None])
         edge_z.extend([z0, z1, None])
 
-    # 🔹 Create Plotly 3D Edge Traces
-    edge_trace = go.Scatter3d(
-        x=edge_x, y=edge_y, z=edge_z,
-        line=dict(width=1.5, color="gray"),
-        hoverinfo='none',
-        mode='lines'
-    )
+    edge_trace = go.Scatter3d(x=edge_x, y=edge_y, z=edge_z, line=dict(width=1.5, color="gray"), mode='lines')
+    node_trace = go.Scatter3d(x=node_x, y=node_y, z=node_z, mode='markers+text',
+                              marker=dict(size=6, color="blue", opacity=0.9), text=node_labels, hoverinfo='text')
 
-    # 🔹 Create Plotly 3D Node Traces (All Nodes in Blue)
-    node_trace = go.Scatter3d(
-        x=node_x, y=node_y, z=node_z,
-        mode='markers+text',
-        marker=dict(size=6, color="blue", opacity=0.9),
-        text=node_labels,
-        hoverinfo='text'
-    )
-
-    # 🔹 Enable Zoom & Orbit Controls
     fig = go.Figure(data=[edge_trace, node_trace])
-    fig.update_layout(
-        title="3D Knowledge Graph of MIMIC-IV Data (Neo4j)",
-        width=1000, height=800,
-        scene=dict(
-            xaxis=dict(showgrid=False, zeroline=False),
-            yaxis=dict(showgrid=False, zeroline=False),
-            zaxis=dict(showgrid=False, zeroline=False),
-        ),
-        dragmode="orbit",  # Allows users to rotate, zoom, and pan
-        scene_camera=dict(
-            up=dict(x=0, y=0, z=1),
-            center=dict(x=0, y=0, z=0),
-            eye=dict(x=1.8, y=1.8, z=1.8)  # Adjust eye position for better initial zoom
-        )
-    )
+    fig.update_layout(title="3D Knowledge Graph", width=1000, height=800, dragmode="orbit")
 
-    fig.show()
+    graph_html_path = os.path.join(os.getcwd(), "graph_output.html")
+    fig.write_html(graph_html_path)
+    
 
-    # 🔹 Display Unique Patient IDs
-    patient_ids = {row["from"] for row in filtered_data if "Patient" in row["from_type"]} | \
-                {row["to"] for row in filtered_data if "Patient" in row["to_type"]}
+    # Ensure only JSON is printed last
+    sys.stdout.write(json.dumps({"graph_path": graph_html_path}))
 
-    print("\n--- Unique Patient IDs in the Knowledge Graph ---")
-    print(sorted(patient_ids))
-
-    # 🔹 Graph Statistics
-    num_nodes = G.number_of_nodes()
-    num_edges = G.number_of_edges()
-
-    print(f"\n--- Knowledge Graph Statistics ---")
-    print(f"Total Nodes Created: {num_nodes}")
-    print(f"Total Relationships Created: {num_edges}")
-
-
-
-def main():
-    try:
-        json_data = sys.argv[1]  # Read first argument (JSON string)
-        data = json.loads(json_data)
-        file_path = data.get("file_path", "No file path provided")
-        
-        print(f"📌 Received file path: {file_path}")  # Debugging
-
-        if not os.path.exists(file_path):
-            raise ValueError(f"File at {file_path} does not exist.")
-        
-        process_csv_and_create_graph(file_path)
-    except Exception as e:
-        print(json.dumps({"error": str(e)}))
 
 if __name__ == "__main__":
-    csv_file_path = "uploads/MIMIC_IV Hospital cleaned-1742103641756.csv"  # <-- Update this path
-    print(f"Checking file path: {os.path.abspath(csv_file_path)}")  # Debugging
-    process_csv_and_create_graph(csv_file_path)  # ✅ FIXED FUNCTION CALL
+    if len(sys.argv) > 1:
+        csv_file_path = sys.argv[1]
+        # print(f"Checking file path: {os.path.abspath(csv_file_path)}")  # Debugging
+        process_csv_and_create_graph(csv_file_path)
+    else:
+        print("No file path provided")

@@ -1,97 +1,136 @@
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const fs = require('fs');
 const path = require('path');
-const { inviokeScript } = require('./utils/invoke');
 const { exec } = require('child_process');
 
 let mainWindow;
 
 app.whenReady().then(() => {
     mainWindow = new BrowserWindow({
-        width: 800,
-        height: 600,
+        width: 1000,
+        height: 800,
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false, // Required for IPC communication
         }
     });
 
-    mainWindow.loadFile('navigate.html');
+    mainWindow.loadFile('navigate.html'); // Load your main UI file
 });
 
-// Open file dialog to select CSV file
-ipcMain.on('open-file-dialog', async () => {
+// ✅ Function to Invoke `creatingGraph.py`
+function invokeCreatingGraphScript(filePath, event) {
+    const pythonScriptPath = path.join(__dirname, 'helper', 'creatingGraph.py'); // Ensure correct path
+
+    exec(`python "${pythonScriptPath}" "${filePath}"`, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Error executing Python script: ${error.message}`);
+            if (event) event.sender.send('python-script-status', 'Error executing Python script.');
+            return;
+        }
+        if (stderr) {
+            console.error(`Python script error: ${stderr}`);
+            if (event) event.sender.send('python-script-status', 'Python script encountered an error.');
+            return;
+        }
+    
+        try {
+            console.log(`Raw Python output:`, stdout.trim());  // Debugging
+    
+            // Ensure we only parse valid JSON
+            const jsonOutput = stdout.trim();
+            if (jsonOutput.startsWith("{") && jsonOutput.endsWith("}")) {
+                const output = JSON.parse(jsonOutput);
+                const graphPath = output.graph_path;
+    
+                // ✅ Automatically load the graph
+                if (event) event.sender.send('display-graph', graphPath);
+            } else {
+                console.error("Python script output is not valid JSON:", jsonOutput);
+                if (event) event.sender.send('python-script-status', 'Invalid JSON output from Python script.');
+            }
+        } catch (e) {
+            console.error("Error parsing Python output:", e);
+            if (event) event.sender.send('python-script-status', 'Failed to parse Python output.');
+        }
+    });
+    
+}
+
+// ✅ Handle CSV Upload and Store File Correctly
+ipcMain.on('process-csv', (event, filePath) => {
+    const uploadFolder = path.join(__dirname, 'uploads'); // Folder for uploaded CSVs
+
+    // ✅ Ensure the upload folder exists
+    if (!fs.existsSync(uploadFolder)) {
+        console.log('Creating upload folder...');
+        fs.mkdirSync(uploadFolder, { recursive: true }); // Create folder if not exists
+    }
+
+    const fileExtension = path.extname(filePath); // Get file extension
+    const timestamp = Date.now(); // Generate unique timestamp for the file
+    const originalFileName = path.basename(filePath, fileExtension); // Get the original filename (no extension)
+    const newFileName = `${originalFileName}-${timestamp}${fileExtension}`; // Append timestamp to avoid overwrites
+    const destinationPath = path.join(uploadFolder, newFileName); // Final storage path
+
+    console.log(`Saving CSV to: ${destinationPath}`);
+
+    // ✅ Copy the CSV file to the upload folder with the new name
+    fs.copyFile(filePath, destinationPath, (err) => {
+        if (err) {
+            console.error('Error uploading CSV:', err);
+            if (event) event.sender.send('upload-status', 'Error uploading CSV.');
+        } else {
+            console.log(`CSV uploaded successfully as ${newFileName}`);
+            if (event) event.sender.send('upload-status', `CSV uploaded successfully as ${newFileName}`);
+
+            // ✅ Ensure the correct file path is passed to the Python script
+            invokeCreatingGraphScript(destinationPath, event);
+        }
+    });
+});
+
+// ✅ Listen for Requests to Open Graph in the Renderer
+ipcMain.on('load-graph', (event, graphPath) => {
+    mainWindow.loadURL(`file://${graphPath}`);
+});
+
+// ✅ Open file dialog to select CSV file
+ipcMain.on('open-file-dialog', async (event) => {
     const result = await dialog.showOpenDialog(mainWindow, {
         properties: ['openFile'],
         filters: [{ name: 'CSV Files', extensions: ['csv'] }]
     });
 
     if (result.canceled) {
-        mainWindow.webContents.send('upload-status', 'File selection was canceled.');
+        event.sender.send('upload-status', 'File selection was canceled.');
     } else {
         const filePath = result.filePaths[0]; // Get selected file path
-        mainWindow.webContents.send('upload-status', 'CSV file selected.');
-        ipcMain.emit('process-csv', null, filePath); // Process the selected file
+        event.sender.send('upload-status', 'CSV file selected.');
+        ipcMain.emit('process-csv', event, filePath); // ✅ Pass `event` correctly
     }
 });
 
-// Handle CSV upload and save it to a folder
-ipcMain.on('process-csv', (event, filePath) => {
-    const uploadFolder = path.join(__dirname, 'uploads'); // Specify your folder here
-
-    // Ensure the folder exists
-    if (!fs.existsSync(uploadFolder)) {
-        console.log('Creating upload folder...');
-        fs.mkdirSync(uploadFolder); // Create folder if it doesn't exist
-    }
-
-    const fileExtension = path.extname(filePath); // Get file extension
-    const timestamp = Date.now(); // Unique timestamp for file name
-    const originalFileName = path.basename(filePath, fileExtension); // Get original file name without extension
-    const newFileName = `${originalFileName}-${timestamp}${fileExtension}`; // Append timestamp to the original file name
-    const destinationPath = path.join(uploadFolder, newFileName);
-
-    // Copy the CSV file to the upload folder with the new name
-    fs.copyFile(filePath, destinationPath, (err) => {
-        if (err) {
-            mainWindow.webContents.send('upload-status', 'Error uploading CSV.');
-            console.error(err);
-        } else {
-            mainWindow.webContents.send('upload-status', `CSV uploaded successfully as ${newFileName}.`);
-            
-            // ✅ Invoke the script and pass the CSV file as a parameter
-            invokeCreatingGraphScript(destinationPath, event);
-        }
-    });
-});
-
-// ✅ Function should be outside the event listener
-function invokeCreatingGraphScript(filePath, event) {
-    const pythonScriptPath = "helper/creatingGraph.py"; // Update path if needed
-
-    exec(`python "${pythonScriptPath}" "${filePath}"`, (error, stdout, stderr) => {
+// ✅ Handle query submission by calling the helper function
+ipcMain.on('run-python-query', (event, query) => {
+    exec(`python helper/query.py "${query}"`, (error, stdout, stderr) => {
         if (error) {
             console.error(`Error executing Python script: ${error.message}`);
-            event.sender.send('python-script-status', 'Error executing Python script.');
+            event.sender.send('query-script-status', 'Error executing Python script.');
             return;
         }
         if (stderr) {
             console.error(`Python script error: ${stderr}`);
-            event.sender.send('python-script-status', 'Python script encountered an error.');
+            event.sender.send('query-script-status', 'Python script encountered an error.');
             return;
         }
 
         console.log(`Python script output: ${stdout}`);
-        event.sender.send('python-script-status', 'Python script executed successfully.');
+        event.sender.send('query-script-status', 'Python script executed successfully.');
     });
-}
-
-// Handle query submission by calling the helper function
-ipcMain.on('run-python-query', (event, query) => {
-        inviokeScript('query.py', {"query":query}, event);
 });
 
-// Handle navigation requests from the renderer process
+// ✅ Handle navigation requests from the renderer process
 ipcMain.on('navigate-to-upload', () => {
     mainWindow.loadFile('uploadcsv.html');
 });
@@ -104,6 +143,7 @@ ipcMain.on('navigate-to-home', () => {
     mainWindow.loadFile('navigate.html');
 });
 
+// ✅ Quit the app when all windows are closed
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
         app.quit();

@@ -3,17 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload CSV File</title>
+    <title>Upload CSV & View Graph</title>
     <script>
         const { ipcRenderer } = require('electron');
 
-        // Function to handle the CSV file upload
         function uploadCSV() {
             ipcRenderer.send('open-file-dialog'); // Request to open the file dialog
         }
 
         ipcRenderer.on('upload-status', (event, message) => {
             document.getElementById('status').innerText = message;
+        });
+
+        ipcRenderer.on('display-graph', (event, graphPath) => {
+            console.log("Graph file path:", graphPath);
+            const frame = document.getElementById('graph-frame');
+            frame.src = `file://${graphPath}`;
+            frame.style.display = 'block'; // Ensure it's visible
         });
 
         function goBack() {
@@ -35,17 +41,9 @@
             margin-bottom: 20px;
         }
 
-        input[type="file"] {
-            padding: 10px;
-            margin: 10px;
-            font-size: 16px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-
         button {
             padding: 10px;
-            margin-top: 20px;
+            margin: 10px;
             font-size: 16px;
             border: none;
             cursor: pointer;
@@ -65,22 +63,37 @@
         .back-btn {
             background-color: #dc3545;
             color: white;
-            margin-top: 10px;
         }
 
         .back-btn:hover {
             background-color: #c82333;
         }
+
+        #status {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        iframe {
+            width: 90%;
+            height: 600px;
+            border: none;
+            margin-top: 20px;
+            display: none; /* Hide until graph is ready */
+        }
     </style>
 </head>
 <body>
 
-    <h1>Upload CSV File</h1>
+    <h1>Upload CSV & View Knowledge Graph</h1>
 
     <button class="upload-btn" onclick="uploadCSV()">Upload CSV</button>
     <button class="back-btn" onclick="goBack()">Back to Home</button>
 
     <p id="status"></p>
+
+    <!-- Graph will display here -->
+    <iframe id="graph-frame"></iframe>
 
 </body>
 </html>
