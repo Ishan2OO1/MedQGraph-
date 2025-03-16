@@ -1,4 +1,3 @@
-# MedQGraph
 # Temporal Medical Record Knowledge Graphs for AI-Driven Healthcare Insights
 
 ## Project Overview
@@ -6,9 +5,8 @@
 Medical records and doctor-patient transcripts contain valuable insights that can significantly improve healthcare decision-making. However, these records are often unstructured, making it difficult to extract and analyze patient history over time. Our project proposes a **Temporal Medical Record Knowledge Graph (TMKG)** that transforms doctor transcripts into structured, queryable knowledge graphs. This system enables healthcare professionals to ask complex medical questions spanning multiple patient histories and time periods, unlocking deeper insights for diagnosis, treatment, and research.
 
 ## Problem Statement
-reduce the time 
+
 Currently, medical records exist as disparate text-based documents, making it challenging to:
-- Reduce the time required for hospital staff to access and interpret patient medical histories, enabling faster and more accurate treatment decisions.
 - Extract meaningful relationships between patient encounters, conditions, and treatments.
 - Analyze patient health trajectories over time.
 - Perform efficient retrieval of relevant information for clinical decision-making.
@@ -19,7 +17,26 @@ Our solution addresses these challenges by leveraging knowledge graph techniques
 
 ## Proposed Solution
 
-Our solution transforms unstructured medical transcripts into a **Temporal Medical Knowledge Graph (TMKG)**. Using the MIMIC dataset, we preprocess data into structured JSON format, construct a knowledge graph with nodes and relationships, and incorporate temporal data for longitudinal tracking. The system enables efficient querying and retrieval of medical insights using vector embeddings and temporal analytics, empowering healthcare professionals with actionable, time-sensitive data.
+### 1. Data Acquisition & Preprocessing
+- We use the **MIMIC dataset** to ensure compliance with privacy regulations while maintaining realistic medical records.
+- Transcripts are structured into JSON format using **Claude AI** for initial transformation.
+- Data includes key patient attributes such as demographics, conditions, immunizations, and observations.
+
+### 2. Knowledge Graph Construction
+- **Nodes**: Represent medical entities such as Patients, Conditions, Observations, Immunizations, and Encounters.
+- **Relationships (Triples)**: Define meaningful medical connections, e.g.,
+  - `(Patient) -[has_condition]-> (Condition)`
+  - `(Patient) -[received]-> (Immunization)`
+  - `(Patient) -[had_encounter]-> (Encounter)`
+  - `(Patient) -[has_measurement]-> (Observation)`
+- **Temporal Data Handling**: Time-sensitive events (e.g., diagnosis dates, vaccination records) are incorporated for longitudinal patient tracking.
+
+### 3. Graph-Based Retrieval & Analytics
+- **Vector Search for Triples**: Instead of relying on complex Cypher queries, our system uses vector embeddings for efficient retrieval.
+- **Chunk-Based Information Extraction**: Each relationship is linked to summarized chunks of medical data for easier interpretation.
+- **Temporal Querying**: Allows users to retrieve medical insights across different time frames.
+
+---
 
 ## Implementation Tools & Frameworks
 
@@ -27,13 +44,13 @@ Our solution transforms unstructured medical transcripts into a **Temporal Medic
 - **Knowledge Graph Construction**: Neo4j, GraphDB
 - **Vector Search**: langchain
 - **Language Model for Text Processing**: OpenAI GPT
+- **Web Interface for Queries**: Streamlit / Flask
 - **Frontend**: Electron.js
-- **Visualization**: NetworkX
 
 ---
 
 ## Outcomes
-- Faster and more accurate treatment decisions for healthcare professionals.
+
 - A functional prototype that converts medical transcripts into a structured temporal knowledge graph.
 - A queryable interface where users can ask complex medical questions.
 - Demonstration of real-world healthcare insights derived from the graph.
@@ -52,7 +69,7 @@ Our solution transforms unstructured medical transcripts into a **Temporal Medic
 #### Frontend (Electron.js)
 1. Clone the repository:
 ```
-git clone https://github.com/lavanyavijayk/MedQGraph.git
+git clone 
 ```
 2. Navigate to the project directory and install npm packages:
 ```
@@ -62,11 +79,6 @@ npm install
 ```
 pip install -r requirements.txt
 ```
-4. Run the application
-```
-npm start
-```
-
 
 ## License
 
