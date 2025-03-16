@@ -3,19 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neo4j Connection</title>
+    <title>Upload CSV File</title>
     <script>
         const { ipcRenderer } = require('electron');
 
-        // Function to handle the connect button click
-        function connectToNeo4j() {
-            // Add the logic for connecting to Neo4j here
-            alert("CSV Uploaded and Connected to Neo4j!");
+        // Function to handle the CSV file upload
+        function uploadCSV() {
+            ipcRenderer.send('open-file-dialog'); // Request to open the file dialog
         }
 
-        // Function to go back to the navigation page
+        ipcRenderer.on('upload-status', (event, message) => {
+            document.getElementById('status').innerText = message;
+        });
+
         function goBack() {
-            window.location.href = 'navigate.html'; // Navigate back to the 'navigate.html' page
+            ipcRenderer.send('navigate-to-home');
         }
     </script>
     <style>
@@ -51,13 +53,13 @@
             transition: 0.3s;
         }
 
-        .connect-btn {
-            background-color: #28a745;
+        .upload-btn {
+            background-color: #007bff;
             color: white;
         }
 
-        .connect-btn:hover {
-            background-color: #218838;
+        .upload-btn:hover {
+            background-color: #0056b3;
         }
 
         .back-btn {
@@ -69,21 +71,16 @@
         .back-btn:hover {
             background-color: #c82333;
         }
-
     </style>
 </head>
 <body>
 
-    <h1>Upload Patient Data & Connect to Neo4j</h1>
-    
-    <label for="fileInput">Upload CSV File:</label>
-    <input type="file" id="fileInput">
-    <br><br>
+    <h1>Upload CSV File</h1>
 
-    <button class="connect-btn" onclick="connectToNeo4j()">Connect</button>
-    <button class="back-btn" onclick="goBack()">Back to Navigation</button>
+    <button class="upload-btn" onclick="uploadCSV()">Upload CSV</button>
+    <button class="back-btn" onclick="goBack()">Back to Home</button>
+
     <p id="status"></p>
 
-    <script src="renderer.js"></script>
 </body>
 </html>
