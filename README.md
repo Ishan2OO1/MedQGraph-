@@ -1,4 +1,4 @@
-# Neural
+# MedQGraph
 # Temporal Medical Record Knowledge Graphs for AI-Driven Healthcare Insights
 
 ## Project Overview
