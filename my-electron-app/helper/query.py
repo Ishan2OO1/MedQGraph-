@@ -33,9 +33,9 @@ try:
 
     # Create direct connection
     graph = Neo4jDirectConnection(
-        "neo4j+s://5f06d1b4.databases.neo4j.io", 
-        "neo4j", 
-        "Nk30WHZPhuWpLUeMRHyuspzr-xjoX7zWw1kcTm8JKlE"
+        "", 
+        "", 
+        ""
     )
     
     # print("✅ Connected to Neo4j database")
