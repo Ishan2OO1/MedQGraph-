@@ -75,6 +75,12 @@ def create_relationships(tx, row):
     """
     tx.run(query, **row)
 
+def save_graph_state():
+    """ Marks that the Knowledge Graph has been successfully created. """
+    state = {"knowledge_graph_ready": True}
+    with open("knowledge_graph_state.json", "w") as f:
+        json.dump(state, f)
+
 def process_csv_and_create_graph(file_path):
     # print(f"Processing CSV file: {file_path}")  # Debugging
     if not os.path.exists(file_path):
@@ -155,6 +161,7 @@ def process_csv_and_create_graph(file_path):
     graph_html_path = os.path.join(os.getcwd(), "graph_output.html")
     fig.write_html(graph_html_path)
     
+    save_graph_state()
 
     # Ensure only JSON is printed last
     sys.stdout.write(json.dumps({"graph_path": graph_html_path}))
@@ -167,3 +174,4 @@ if __name__ == "__main__":
         process_csv_and_create_graph(csv_file_path)
     else:
         print("No file path provided")
+
