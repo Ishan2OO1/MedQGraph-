@@ -52,7 +52,7 @@ Our solution transforms unstructured medical transcripts into a **Temporal Medic
 #### Frontend (Electron.js)
 1. Clone the repository:
 ```
-git clone 
+git clone https://github.com/lavanyavijayk/MedQGraph.git
 ```
 2. Navigate to the project directory and install npm packages:
 ```
