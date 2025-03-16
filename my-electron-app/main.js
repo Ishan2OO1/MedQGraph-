@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const fs = require('fs');
 const path = require('path');
 const { inviokeScript } = require('./utils/invoke');
+const { exec } = require('child_process');
 
 let mainWindow;
 
@@ -57,10 +58,33 @@ ipcMain.on('process-csv', (event, filePath) => {
             console.error(err);
         } else {
             mainWindow.webContents.send('upload-status', `CSV uploaded successfully as ${newFileName}.`);
-
+            
+            // ✅ Invoke the script and pass the CSV file as a parameter
+            invokeCreatingGraphScript(destinationPath, event);
         }
     });
 });
+
+// ✅ Function should be outside the event listener
+function invokeCreatingGraphScript(filePath, event) {
+    const pythonScriptPath = "helper/creatingGraph.py"; // Update path if needed
+
+    exec(`python "${pythonScriptPath}" "${filePath}"`, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Error executing Python script: ${error.message}`);
+            event.sender.send('python-script-status', 'Error executing Python script.');
+            return;
+        }
+        if (stderr) {
+            console.error(`Python script error: ${stderr}`);
+            event.sender.send('python-script-status', 'Python script encountered an error.');
+            return;
+        }
+
+        console.log(`Python script output: ${stdout}`);
+        event.sender.send('python-script-status', 'Python script executed successfully.');
+    });
+}
 
 // Handle query submission by calling the helper function
 ipcMain.on('run-python-query', (event, query) => {
