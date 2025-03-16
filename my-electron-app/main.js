@@ -111,6 +111,11 @@ ipcMain.on('open-file-dialog', async (event) => {
     }
 });
 
+// Handle query submission by calling the helper function
+ipcMain.on('run-python-query', (event, query) => {
+    inviokeScript('query.py', {"query":query}, event);
+ });
+
 // ✅ Handle query submission by calling the helper function
 ipcMain.on('run-python-query', (event, query) => {
     exec(`python helper/query.py "${query}"`, (error, stdout, stderr) => {
