@@ -12,30 +12,30 @@ load_dotenv()
 llm = ChatOpenAI(
     temperature=0,
     model="gpt-4o",
-    openai_api_key=""
+    openai_api_key="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"
 )
 
 # Direct Neo4j connection
 try:
     from neo4j import GraphDatabase
     
-    # class Neo4jDirectConnection:
-    #     def __init__(self, uri, username, password):
-    #         self.driver = GraphDatabase.driver(uri, auth=(username, password))
+    class Neo4jDirectConnection:
+        def __init__(self, uri, username, password):
+            self.driver = GraphDatabase.driver(uri, auth=(username, password))
             
-    #     def query(self, cypher_query, parameters=None):
-    #         with self.driver.session() as session:
-    #             result = session.run(cypher_query, parameters or {})
-    #             return [dict(record) for record in result]
+        def query(self, cypher_query, parameters=None):
+            with self.driver.session() as session:
+                result = session.run(cypher_query, parameters or {})
+                return [dict(record) for record in result]
                 
-    #     def close(self):
-    #         self.driver.close()
+        def close(self):
+            self.driver.close()
 
     # Create direct connection
     graph = Neo4jDirectConnection(
-        "", 
-        "", 
-        ""
+        "neo4j+s://5f06d1b4.databases.neo4j.io", 
+        "neo4j", 
+        "Nk30WHZPhuWpLUeMRHyuspzr-xjoX7zWw1kcTm8JKlE"
     )
     
     # print("✅ Connected to Neo4j database")
@@ -318,7 +318,7 @@ def process_query(user_query):
 llm = ChatOpenAI(
     temperature=0,
     model="gpt-4o",
-    openai_api_key=""
+    openai_api_key="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"
 )
 
 # Direct Neo4j connection
@@ -461,9 +461,7 @@ def generate_cypher_query(user_query):
     
     Return ONLY the Cypher query with no additional text or explanation.
     """
-    print("/n"*10)
-    print(cypher_prompt)
-    print("/n"*10)
+    
     cypher_response = llm.invoke(cypher_prompt)
     cypher_query = cypher_response.content.strip()
     
