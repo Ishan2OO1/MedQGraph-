@@ -1,8 +1,6 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const fs = require('fs');
 const path = require('path');
-const { inviokeScript } = require('./utils/invoke');
-
 
 let mainWindow;
 
@@ -62,12 +60,7 @@ ipcMain.on('process-csv', (event, filePath) => {
     });
 });
 
-// Handle query submission by calling the helper function
-ipcMain.on('run-python-query', (event, query) => {
-    inviokeScript('query.py', {"query":query}, event);
-});
-
-// Handle navigation requests
+// Handle navigation requests from the renderer process
 ipcMain.on('navigate-to-upload', () => {
     mainWindow.loadFile('uploadcsv.html');
 });
