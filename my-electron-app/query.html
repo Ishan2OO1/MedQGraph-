@@ -3,25 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Query Database</title>
+    <title>MedQGraph - Query the Database</title>
     <script>
         const { ipcRenderer } = require('electron');
 
         function submitQuery() {
-            const query = document.getElementById('queryInput').value;
-            document.getElementById('response').innerText = "Processing...";
+            const query = document.getElementById('queryInput').value.trim();
+            if (!query) {
+                alert("Please enter a query.");
+                return;
+            }
 
-            // Send the query to the backend (main.js)
-            ipcRenderer.send('run-python-query', { query }); // Send query as JSON
+            document.getElementById('loader').style.display = "block";
+            document.getElementById('response').innerHTML = "";
+
+            ipcRenderer.send('run-python-query', query);
         }
 
-        // Listen for the response from Python
         ipcRenderer.on('query-response', (event, response) => {
-            document.getElementById('response').innerText = response;
+            const responseContainer = document.getElementById('response');
+            document.getElementById('loader').style.display = "none"; 
+
+            try {
+                if (typeof response === "string") {
+                    response = JSON.parse(response);
+                }
+
+                if (response.error) {
+                    responseContainer.innerHTML = `<p style="color: red;">Error: ${response.error}</p>`;
+                    return;
+                }
+
+                let resultsHTML = `<h3>Query: ${response.query || "Unknown Query"}</h3>
+                                   <p><strong>Cypher Query:</strong> <pre>${response.cypher_query || "N/A"}</pre></p>
+                                   <p><strong>Summary:</strong> ${response.summary || "No summary available."}</p>`;
+
+                if (Array.isArray(response.results) && response.results.length > 0) {
+                    resultsHTML += `<h4>Results:</h4><ul>`;
+                    response.results.forEach(result => {
+                        resultsHTML += `<li>${Object.entries(result).map(([key, value]) => `<strong>${key}:</strong> ${value}`).join(', ')}</li>`;
+                    });
+                    resultsHTML += `</ul>`;
+                } else {
+                    resultsHTML += `<p>No results found.</p>`;
+                }
+
+                if (response.recommendations) {
+                    resultsHTML += `<h4>Follow-up Recommendations:</h4><ul>`;
+                    response.recommendations.split("\n").forEach(rec => {
+                        resultsHTML += `<li>${rec.trim()}</li>`;
+                    });
+                    resultsHTML += `</ul>`;
+                }
+
+                responseContainer.innerHTML = resultsHTML;
+            } catch (error) {
+                console.error("Error processing response:", error);
+                responseContainer.innerHTML = `<p style="color: red;">Failed to process response.</p>`;
+            }
         });
 
         function goBack() {
-            ipcRenderer.send('navigate-to-home'); // Navigate back
+            ipcRenderer.send('navigate-to-home');
         }
     </script>
     <style>
@@ -31,79 +74,120 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #f4f4f4;
-            font-family: Arial, sans-serif;
+            background-color: #e3f2fd;
+            font-family: 'Arial', sans-serif;
+            text-align: center;
             position: relative;
         }
 
-        .back-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            padding: 8px 16px;
-            font-size: 14px;
-            border: none;
-            cursor: pointer;
-            border-radius: 5px;
-            background-color: #dc3545;
-            color: white;
-            transition: 0.3s;
+        .title {
+            font-size: 36px;
+            font-weight: bold;
+            color: #007bff;
+            text-shadow: 2px 2px 5px rgba(0, 123, 255, 0.3);
+            margin-bottom: 10px;
         }
 
-        .back-btn:hover {
-            background-color: #c82333;
-        }
-
-        h1 {
-            margin-bottom: 20px;
+        .subtitle {
+            font-size: 18px;
+            color: #0056b3;
+            margin-bottom: 30px;
         }
 
         input {
-            width: 300px;
+            width: 350px;
             padding: 10px;
             margin: 10px;
             font-size: 16px;
-            border: 1px solid #ccc;
+            border: 2px solid #007bff;
             border-radius: 5px;
+            outline: none;
         }
 
-        .submit-btn {
-            padding: 10px;
-            margin-top: 10px;
+        input:focus {
+            border-color: #0056b3;
+            box-shadow: 0 0 8px rgba(0, 123, 255, 0.5);
+        }
+
+        button {
+            display: block;
+            width: 200px;
+            padding: 12px;
+            margin: 10px;
             font-size: 16px;
+            font-weight: bold;
             border: none;
             cursor: pointer;
-            border-radius: 5px;
+            border-radius: 8px;
             background-color: #007bff;
             color: white;
             transition: 0.3s;
+            box-shadow: 3px 3px 8px rgba(0, 123, 255, 0.3);
         }
 
-        .submit-btn:hover {
+        button:hover {
             background-color: #0056b3;
+            box-shadow: 3px 3px 12px rgba(0, 123, 255, 0.5);
+        }
+
+        .loader {
+            display: none;
+            margin-top: 20px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #007bff;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         #response {
             margin-top: 20px;
-            padding: 10px;
-            width: 300px;
-            text-align: center;
-            border: 1px solid #ccc;
+            padding: 15px;
+            width: 80%;
+            max-width: 700px;
+            text-align: left;
+            border: 2px solid #007bff;
             background-color: white;
-            border-radius: 5px;
+            border-radius: 8px;
+            overflow-wrap: break-word;
+            white-space: pre-wrap;
+            box-shadow: 3px 3px 8px rgba(0, 123, 255, 0.3);
+        }
+
+        h3, h4 {
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 5px;
         }
     </style>
 </head>
 <body>
 
-    <!-- Back Button Positioned at the Top Right -->
-    <button class="back-btn" onclick="goBack()">Back</button>
+    <div>
+        <div class="title">MedQGraph</div>
+        <div class="subtitle">Query the Knowledge Graph</div>
+    </div>
 
-    <h1>Query the Database</h1>
     <input type="text" id="queryInput" placeholder="Enter your query here...">
-    <button class="submit-btn" onclick="submitQuery()">Submit</button>
+    <button onclick="submitQuery()">Submit Query</button>
+    <button onclick="goBack()">Back to Home</button>
 
-    <div id="response">Waiting for response...</div>
+    <div id="loader" class="loader"></div>
+
+    <div id="response"></div>
 
 </body>
 </html>

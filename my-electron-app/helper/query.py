@@ -1,11 +1,4 @@
-import sys
-import json
-import os
-from langchain_openai import ChatOpenAI
-from dotenv import load_dotenv
-
 # Load Environment Variables
-load_dotenv()
 import sys
 import json
 import os
@@ -45,7 +38,7 @@ try:
         "Nk30WHZPhuWpLUeMRHyuspzr-xjoX7zWw1kcTm8JKlE"
     )
     
-    print("✅ Connected to Neo4j database")
+    # print("✅ Connected to Neo4j database")
     
 except ImportError:
     print("❌ Neo4j driver not found. Installing...")
@@ -179,10 +172,10 @@ def generate_cypher_query(user_query):
 def execute_query_safely(cypher_query, user_query):
     """Execute Cypher query with fallbacks if it fails."""
     try:
-        print("\n🔹 Executing Cypher Query:")
-        print(cypher_query)
+        # print("\n🔹 Executing Cypher Query:")
+        # print(cypher_query)
         results = graph.query(cypher_query)
-        print(f"✅ Query returned {len(results)} results")
+        # print(f"✅ Query returned {len(results)} results")
         return results, cypher_query
     except Exception as e:
         print(f"❌ Error executing query: {str(e)}")
@@ -274,7 +267,7 @@ def process_query(user_query):
         return json.dumps({"error": "⚠️ The Knowledge Graph is empty. Please make sure your database contains data."})
 
     try:
-        print("\n🔍 Processing Query:", user_query)
+        # print("\n🔍 Processing Query:", user_query)
 
         # Generate Cypher query using the LLM
         cypher_query = generate_cypher_query(user_query)
@@ -284,15 +277,15 @@ def process_query(user_query):
         
         # Generate a summary of the results
         summary = generate_summary(user_query, results)
-        print("\n✅ Summary:", summary)
+        # print("\n✅ Summary:", summary)
 
         # Fetch relationships in KG for better recommendations
         related_relations = fetch_related_relations()
 
         # Generate Follow-Up Recommendations
         recommendations = generate_recommendations(user_query, related_relations, results)
-        print("\n🔄 Recommendations:")
-        print(recommendations)
+        # print("\n🔄 Recommendations:")
+        # print(recommendations)
 
         # Structure JSON response
         query_response = {
@@ -310,17 +303,17 @@ def process_query(user_query):
         print(error_message)
         return json.dumps({"error": error_message})
 
-if __name__ == "__main__":
-    try:
-        # Read JSON input from Electron
-        json_data = sys.argv[1]
-        data = json.loads(json_data)
-        query = data.get("query", "No query provided")
-        output = process_query(query)
-        print(output)  
+# if __name__ == "__main__":
+#     try:
+#         # Read JSON input from Electron
+#         json_data = sys.argv[1]
+#         data = json.loads(json_data)
+#         query = data.get("query", "No query provided")
+#         output = process_query(query)
+#         sys.stdout.write(json.dumps(output))  
 
-    except Exception as e:
-        print(json.dumps({"error": str(e)}))
+#     except Exception as e:
+#         print(json.dumps({"error": str(e)}))
 # Initialize GPT-4o
 llm = ChatOpenAI(
     temperature=0,
@@ -351,7 +344,7 @@ try:
         "Nk30WHZPhuWpLUeMRHyuspzr-xjoX7zWw1kcTm8JKlE"
     )
     
-    print("✅ Connected to Neo4j database")
+    # print("✅ Connected to Neo4j database")
     
 except ImportError:
     print("❌ Neo4j driver not found. Installing...")
@@ -379,7 +372,7 @@ except ImportError:
         "Nk30WHZPhuWpLUeMRHyuspzr-xjoX7zWw1kcTm8JKlE"
     )
     
-    print("✅ Neo4j driver installed and connected")
+    # print("✅ Neo4j driver installed and connected")
 
 def is_knowledge_graph_ready():
     """Check if the Knowledge Graph has data in Neo4j."""
@@ -468,7 +461,9 @@ def generate_cypher_query(user_query):
     
     Return ONLY the Cypher query with no additional text or explanation.
     """
-    
+    print("/n"*10)
+    print(cypher_prompt)
+    print("/n"*10)
     cypher_response = llm.invoke(cypher_prompt)
     cypher_query = cypher_response.content.strip()
     
@@ -485,10 +480,10 @@ def generate_cypher_query(user_query):
 def execute_query_safely(cypher_query, user_query):
     """Execute Cypher query with fallbacks if it fails."""
     try:
-        print("\n🔹 Executing Cypher Query:")
-        print(cypher_query)
+        # print("\n🔹 Executing Cypher Query:")
+        # print(cypher_query)
         results = graph.query(cypher_query)
-        print(f"✅ Query returned {len(results)} results")
+        # print(f"✅ Query returned {len(results)} results")
         return results, cypher_query
     except Exception as e:
         print(f"❌ Error executing query: {str(e)}")
@@ -499,7 +494,7 @@ def execute_query_safely(cypher_query, user_query):
             if patient_id:
                 fallback_query = f"MATCH (p:Patient) WHERE p.patientId = '{patient_id}' RETURN p"
                 print("\n🔄 Trying patient ID fallback query:")
-                print(fallback_query)
+                # print(fallback_query)
                 try:
                     results = graph.query(fallback_query)
                     return results, fallback_query
@@ -580,7 +575,7 @@ def process_query(user_query):
         return json.dumps({"error": "⚠️ The Knowledge Graph is empty. Please make sure your database contains data."})
 
     try:
-        print("\n🔍 Processing Query:", user_query)
+        # print("\n🔍 Processing Query:", user_query)
 
         # Generate Cypher query using the LLM
         cypher_query = generate_cypher_query(user_query)
@@ -590,15 +585,15 @@ def process_query(user_query):
         
         # Generate a summary of the results
         summary = generate_summary(user_query, results)
-        print("\n✅ Summary:", summary)
+        # print("\n✅ Summary:", summary)
 
         # Fetch relationships in KG for better recommendations
         related_relations = fetch_related_relations()
 
         # Generate Follow-Up Recommendations
         recommendations = generate_recommendations(user_query, related_relations, results)
-        print("\n🔄 Recommendations:")
-        print(recommendations)
+        # print("\n🔄 Recommendations:")
+        # print(recommendations)
 
         # Structure JSON response
         query_response = {
@@ -622,8 +617,18 @@ if __name__ == "__main__":
         json_data = sys.argv[1]
         data = json.loads(json_data)
         query = data.get("query", "No query provided")
+
         output = process_query(query)
-        print(output)  
+
+        # ✅ Convert JSON to readable text output
+        if isinstance(output, dict):
+            readable_output = "\n".join([f"{key}: {value}" for key, value in output.items()])
+        else:
+            readable_output = str(output)
+
+        print(readable_output)  # ✅ Print clean, readable output
+        sys.stdout.flush()  # ✅ Ensure full output is sent
 
     except Exception as e:
-        print(json.dumps({"error": str(e)}))
+        print(f"Error: {str(e)}")
+        sys.stdout.flush()

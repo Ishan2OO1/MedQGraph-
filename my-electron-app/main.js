@@ -26,17 +26,25 @@ function invokeScript(scriptName, params, event) {
     exec(command, (error, stdout, stderr) => {
         if (error) {
             console.error(`Error executing Python script: ${error.message}`);
-            event.sender.send('query-script-status', 'Error executing Python script.');
+            event.sender.send('query-response', { error: 'Error executing Python script.' });
             return;
         }
         if (stderr) {
             console.error(`Python script error: ${stderr}`);
-            event.sender.send('query-script-status', 'Python script encountered an error.');
+            event.sender.send('query-response', { error: 'Python script encountered an error.' });
             return;
         }
 
-        console.log(`Python script output: ${stdout}`);
-        event.sender.send('query-script-status', stdout);
+        try {
+            jsonOutput = stdout.trim().match(/\{.*\}$/s); // ✅ Extracts only the JSON part
+            if (!jsonOutput) throw new Error("No valid JSON found in Python output");
+
+            const output = JSON.parse(jsonOutput[0]); // ✅ Parse only the extracted JSON
+            event.sender.send('query-response', output);
+        } catch (e) {
+            console.error("Error parsing Python output:", e);
+            event.sender.send('query-response', { error: 'Failed to parse Python output.' });
+        }
     });
 }
 

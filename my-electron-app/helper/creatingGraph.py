@@ -82,17 +82,13 @@ def save_graph_state():
         json.dump(state, f)
 
 def process_csv_and_create_graph(file_path):
-    # print(f"Processing CSV file: {file_path}")  # Debugging
     if not os.path.exists(file_path):
         raise ValueError(f"File at {file_path} does not exist.")
-    
-    df = pd.read_csv(file_path, low_memory=False)  # Fix dtype warning
-    # print("✅ CSV Loaded Successfully! First few rows:")
-    # print(df.head())  # Print first few rows for debugging
-    
-    df = df.fillna("Unknown")  # Replace NaN values with "Unknown"
-    df = df.head(50)  # Limit to first 50 rows for testing
-    
+
+    df = pd.read_csv(file_path, low_memory=False)
+    df = df.fillna("Unknown")
+    df = df.head(50)
+
     driver = GraphDatabase.driver(URI, auth=(USERNAME, PASSWORD))
     
     with driver.session() as session:
@@ -102,12 +98,16 @@ def process_csv_and_create_graph(file_path):
     with driver.session() as session:
         for _, row in df.iterrows():
             session.execute_write(create_relationships, row)
-    
-    # print("✅ Knowledge Graph Successfully Created in Neo4j!")
+
+    # 🔹 Fetch Node & Relationship Count
+    graph = Graph(URI, auth=(USERNAME, PASSWORD))
+    node_count_query = "MATCH (n) RETURN count(n) AS node_count"
+    rel_count_query = "MATCH ()-[r]->() RETURN count(r) AS rel_count"
+
+    node_count = graph.run(node_count_query).evaluate()
+    rel_count = graph.run(rel_count_query).evaluate()
 
     # 🔹 Generate Graph Visualization
-    graph = Graph(URI, auth=(USERNAME, PASSWORD))
-    
     query = """
     MATCH (n)-[r]->(m)
     RETURN labels(n) AS from_type, 
@@ -125,16 +125,12 @@ def process_csv_and_create_graph(file_path):
 
     filtered_data = [row for row in data if row["from"] != "Unknown" and row["to"] != "Unknown"]
 
-    # 🔹 Create NetworkX Graph
     G = nx.DiGraph()
     for row in filtered_data:
         from_node = f"{row['from']} ({row['from_type'][0]})"
         to_node = f"{row['to']} ({row['to_type'][0]})"
-        G.add_node(from_node)
-        G.add_node(to_node)
         G.add_edge(from_node, to_node, label=row["relation"])
 
-    # 🔹 Generate 3D Graph Visualization
     pos = nx.spring_layout(G, dim=3, seed=42)
     node_x, node_y, node_z, node_labels = [], [], [], []
     for node, (x, y, z) in pos.items():
@@ -160,11 +156,13 @@ def process_csv_and_create_graph(file_path):
 
     graph_html_path = os.path.join(os.getcwd(), "graph_output.html")
     fig.write_html(graph_html_path)
-    
-    save_graph_state()
 
-    # Ensure only JSON is printed last
-    sys.stdout.write(json.dumps({"graph_path": graph_html_path}))
+    sys.stdout.write(json.dumps({
+        "graph_path": graph_html_path,
+        "node_count": node_count,
+        "rel_count": rel_count
+    }))
+
 
 
 if __name__ == "__main__":

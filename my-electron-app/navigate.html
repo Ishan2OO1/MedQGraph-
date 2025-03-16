@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Navigation Page</title>
+    <title>MedQGraph - Navigation</title>
     <script>
         const { ipcRenderer } = require('electron');
 
@@ -16,56 +16,67 @@
         }
     </script>
     <style>
+        /* 🌟 General Styling */
         body {
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #f4f4f4;
-            font-family: Arial, sans-serif;
-        }
-
-        .container {
+            background-color: #e3f2fd; /* Light Blue */
+            font-family: 'Arial', sans-serif;
+            position: relative;
             text-align: center;
         }
 
+        /* 🌟 Title Styling */
+        .title {
+            font-size: 42px;
+            font-weight: bold;
+            color: #007bff; /* Bright Blue */
+            text-shadow: 2px 2px 5px rgba(0, 123, 255, 0.3);
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 18px;
+            color: #0056b3; /* Darker Blue */
+            margin-bottom: 30px;
+        }
+
+        /* 🌟 Button Styling */
         button {
             display: block;
-            width: 200px;
+            width: 250px;
             padding: 15px;
-            margin: 20px auto;
-            font-size: 16px;
+            margin: 15px auto;
+            font-size: 18px;
+            font-weight: bold;
             border: none;
             cursor: pointer;
-            border-radius: 5px;
+            border-radius: 8px;
+            background-color: #007bff; /* Blue */
+            color: white;
             transition: 0.3s;
+            box-shadow: 3px 3px 8px rgba(0, 123, 255, 0.3);
         }
 
-        .upload-btn {
-            background-color: #007bff;
-            color: white;
-        }
-
-        .upload-btn:hover {
-            background-color: #0056b3;
-        }
-
-        .query-btn {
-            background-color: #28a745;
-            color: white;
-        }
-
-        .query-btn:hover {
-            background-color: #1e7e34;
+        button:hover {
+            background-color: #0056b3; /* Darker Blue */
+            box-shadow: 3px 3px 12px rgba(0, 123, 255, 0.5);
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <button class="upload-btn" onclick="uploadCSV()">Upload CSV</button>
-        <button class="query-btn" onclick="queryDB()">Query DB</button>
+    <!-- 🌟 MedQGraph Title -->
+    <div>
+        <div class="title">MedQGraph</div>
+        <div class="subtitle">AI-Powered Medical Knowledge Graph</div>
     </div>
+
+    <!-- 🔼 Navigation Buttons -->
+    <button onclick="uploadCSV()">Upload CSV & Create Graph</button>
+    <button onclick="queryDB()">Query the Database</button>
 
 </body>
 </html>
