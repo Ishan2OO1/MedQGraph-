@@ -18,18 +18,15 @@
     <style>
         body {
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
             background-color: #f4f4f4;
             font-family: Arial, sans-serif;
-            position: relative;
         }
 
         .container {
             text-align: center;
-            z-index: 1;
         }
 
         button {
@@ -45,32 +42,21 @@
         }
 
         .upload-btn {
-            background-color: #070708;
+            background-color: #007bff;
             color: white;
         }
 
         .upload-btn:hover {
-            background-color: #49494f;
+            background-color: #0056b3;
         }
 
         .query-btn {
-            background-color: #070708;
+            background-color: #28a745;
             color: white;
         }
 
         .query-btn:hover {
-            background-color: #49494f;
-        }
-
-        .background-image {
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100%;
-            max-height: 150px;
-            object-fit: cover;
-            z-index: 0;
+            background-color: #1e7e34;
         }
     </style>
 </head>
@@ -80,8 +66,6 @@
         <button class="upload-btn" onclick="uploadCSV()">Upload CSV</button>
         <button class="query-btn" onclick="queryDB()">Query DB</button>
     </div>
-
-    <img src="assets/BG.png" alt="Background Image" class="background-image">
 
 </body>
 </html>
